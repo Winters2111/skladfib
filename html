@@ -1,140 +1,134 @@
 <!DOCTYPE html>
-<html lang="uk">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Звіт складу</title>
+  <title>FIB Weapons Checkout</title>
   <style>
     body {
       font-family: Arial, sans-serif;
-      max-width: 700px;
+      max-width: 750px;
       margin: 0 auto;
       padding: 20px;
+      background: #0c0f14;
+      color: #fff;
     }
     h1 {
       text-align: center;
+      color: #4aa3ff;
+      letter-spacing: 1px;
     }
     label {
       display: block;
-      margin-top: 10px;
+      margin-top: 12px;
       font-weight: bold;
     }
     input, select, textarea {
       width: 100%;
-      padding: 6px;
-      box-sizing: border-box;
+      padding: 8px;
       margin-top: 4px;
+      background: #1a1e25;
+      color: #fff;
+      border: 1px solid #333;
+      border-radius: 3px;
     }
     textarea {
       min-height: 80px;
       resize: vertical;
     }
     button {
-      margin-top: 15px;
-      padding: 10px 20px;
-      font-size: 16px;
+      margin-top: 20px;
+      padding: 14px;
+      font-size: 17px;
       cursor: pointer;
+      background: #4aa3ff;
+      border: none;
+      color: #fff;
+      width: 100%;
+      border-radius: 4px;
     }
     .status {
       margin-top: 10px;
       font-weight: bold;
+      text-align: center;
+      color: #4aa3ff;
     }
   </style>
 </head>
 <body>
-  <h1>Звіт складу</h1>
+
+  <h1>FIB Weapons Checkout Form</h1>
 
   <form id="reportForm">
 
     <label>
-      Склад
-      <select id="warehouse" required>
-        <option value="">Обрати склад...</option>
-        <option value="Склад #1">Склад #1</option>
-        <option value="Склад #2">Склад #2</option>
-        <option value="Склад #3">Склад #3</option>
+      FIB Department / Division
+      <select id="department" required>
+        <option value="">Select department...</option>
+        <option value="Operations Division">Operations Division</option>
+        <option value="SWAT Tactical Unit">SWAT Tactical Unit</option>
+        <option value="Criminal Investigations Division (CID)">Criminal Investigations Division (CID)</option>
+        <option value="Internal Affairs (IA)">Internal Affairs (IA)</option>
+        <option value="Cyber Division">Cyber Division</option>
       </select>
     </label>
 
     <label>
-      Дата
+      Date
       <input type="date" id="date" required>
     </label>
 
     <label>
-      Хто бере (нік / ім'я)
-      <input type="text" id="taker" required>
+      Officer (Name / Callsign / Badge)
+      <input type="text" id="officer" placeholder="John R. | Callsign 421 | Badge 1132" required>
     </label>
 
     <label>
-      Яку зброю бере
-      <textarea id="weapon" placeholder="Наприклад: M4A1 — 1 шт, Glock — 2 шт" required></textarea>
+      Weapons Taken
+      <textarea id="weapon" placeholder="Example: M4A1 – 1 pc, SIG Sauer – 2 pcs" required></textarea>
     </label>
 
-    <label>
-      Останки / Залишки
-      <select id="leftovers" required>
-        <option value="">Обрати...</option>
-        <option value="Достатньо">Достатньо</option>
-        <option value="Мало">Мало</option>
-        <option value="Критично мало">Критично мало</option>
-      </select>
-    </label>
-
-    <label>
-      Проблеми / інциденти
-      <textarea id="issues" placeholder="Якщо усе добре — можна лишити порожнім"></textarea>
-    </label>
-
-    <button type="submit">Відправити звіт</button>
+    <button type="submit">Submit Report</button>
   </form>
 
   <p class="status" id="status"></p>
 
   <script>
     // ❗ ВСТАВ СЮДИ СВІЙ DISCORD WEBHOOK
-    const WEBHOOK_URL = "https://discord.com/api/webhooks/ТУТ_ТВОЙ_WEBHOOK";
+    const WEBHOOK_URL = "https://discord.com/api/webhooks/ТУТ_ТВІЙ_WEBHOOK";
+
+    // Автоматична дата
+    document.getElementById("date").value = new Date().toISOString().split("T")[0];
 
     const form = document.getElementById('reportForm');
     const statusEl = document.getElementById('status');
 
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
-      statusEl.textContent = "Відправляю звіт...";
+      statusEl.textContent = "Sending report...";
 
-      const warehouse = document.getElementById('warehouse').value;
+      const department = document.getElementById('department').value;
       const date = document.getElementById('date').value;
-      const taker = document.getElementById('taker').value.trim();
+      const officer = document.getElementById('officer').value.trim();
       const weapon = document.getElementById('weapon').value.trim();
-      const leftovers = document.getElementById('leftovers').value;
-      const issues = document.getElementById('issues').value.trim();
 
-      if (!warehouse || !date || !taker || !weapon || !leftovers) {
-        statusEl.textContent = "Заповни обов'язкові поля!";
+      if (!department || !date || !officer || !weapon) {
+        statusEl.textContent = "Please fill all fields!";
         return;
       }
 
-      // Embed-повідомлення
+      // Embed
       const fields = [
-        { name: "Склад", value: warehouse, inline: true },
-        { name: "Дата", value: date, inline: true },
-        { name: "Хто бере", value: taker, inline: false },
-        { name: "Зброя, яку бере", value: weapon, inline: false },
-        { name: "Залишки", value: leftovers, inline: true },
+        { name: "Department / Division", value: department, inline: false },
+        { name: "Date", value: date, inline: true },
+        { name: "Officer", value: officer, inline: false },
+        { name: "Weapons Taken", value: weapon, inline: false }
       ];
 
-      if (issues) {
-        fields.push({
-          name: "Проблеми / інциденти",
-          value: issues,
-          inline: false
-        });
-      }
-
       const payload = {
-        content: "@here Новий звіт складу",
+        content: "@here New FIB weapons checkout",
         embeds: [
           {
-            title: "Звіт складу",
+            title: "FIB Weapons Report",
             color: 3447003,
             fields: fields
           }
@@ -149,13 +143,15 @@
         });
 
         if (res.ok) {
-          statusEl.textContent = "Звіт відправлено в Discord ✅";
+          statusEl.textContent = "Report sent to Discord ✔️";
           form.reset();
+          // Ставимо дату знову
+          document.getElementById("date").value = new Date().toISOString().split("T")[0];
         } else {
-          statusEl.textContent = "Помилка при відправці ❌";
+          statusEl.textContent = "Error sending the report ❌";
         }
       } catch (err) {
-        statusEl.textContent = "Не вдалося відправити (перевір URL вебхука)";
+        statusEl.textContent = "Connection error ❌";
       }
     });
   </script>

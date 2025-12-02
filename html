@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <title>Звіт складу</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 700px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    h1 {
+      text-align: center;
+    }
+    label {
+      display: block;
+      margin-top: 10px;
+      font-weight: bold;
+    }
+    input, select, textarea {
+      width: 100%;
+      padding: 6px;
+      box-sizing: border-box;
+      margin-top: 4px;
+    }
+    textarea {
+      min-height: 80px;
+      resize: vertical;
+    }
+    button {
+      margin-top: 15px;
+      padding: 10px 20px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    .status {
+      margin-top: 10px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <h1>Звіт складу</h1>
+
+  <form id="reportForm">
+
+    <label>
+      Склад
+      <select id="warehouse" required>
+        <option value="">Обрати склад...</option>
+        <option value="Склад #1">Склад #1</option>
+        <option value="Склад #2">Склад #2</option>
+        <option value="Склад #3">Склад #3</option>
+      </select>
+    </label>
+
+    <label>
+      Дата
+      <input type="date" id="date" required>
+    </label>
+
+    <label>
+      Хто бере (нік / ім'я)
+      <input type="text" id="taker" required>
+    </label>
+
+    <label>
+      Яку зброю бере
+      <textarea id="weapon" placeholder="Наприклад: M4A1 — 1 шт, Glock — 2 шт" required></textarea>
+    </label>
+
+    <label>
+      Останки / Залишки
+      <select id="leftovers" required>
+        <option value="">Обрати...</option>
+        <option value="Достатньо">Достатньо</option>
+        <option value="Мало">Мало</option>
+        <option value="Критично мало">Критично мало</option>
+      </select>
+    </label>
+
+    <label>
+      Проблеми / інциденти
+      <textarea id="issues" placeholder="Якщо усе добре — можна лишити порожнім"></textarea>
+    </label>
+
+    <button type="submit">Відправити звіт</button>
+  </form>
+
+  <p class="status" id="status"></p>
+
+  <script>
+    // ❗ ВСТАВ СЮДИ СВІЙ DISCORD WEBHOOK
+    const WEBHOOK_URL = "https://discord.com/api/webhooks/ТУТ_ТВОЙ_WEBHOOK";
+
+    const form = document.getElementById('reportForm');
+    const statusEl = document.getElementById('status');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      statusEl.textContent = "Відправляю звіт...";
+
+      const warehouse = document.getElementById('warehouse').value;
+      const date = document.getElementById('date').value;
+      const taker = document.getElementById('taker').value.trim();
+      const weapon = document.getElementById('weapon').value.trim();
+      const leftovers = document.getElementById('leftovers').value;
+      const issues = document.getElementById('issues').value.trim();
+
+      if (!warehouse || !date || !taker || !weapon || !leftovers) {
+        statusEl.textContent = "Заповни обов'язкові поля!";
+        return;
+      }
+
+      // Embed-повідомлення
+      const fields = [
+        { name: "Склад", value: warehouse, inline: true },
+        { name: "Дата", value: date, inline: true },
+        { name: "Хто бере", value: taker, inline: false },
+        { name: "Зброя, яку бере", value: weapon, inline: false },
+        { name: "Залишки", value: leftovers, inline: true },
+      ];
+
+      if (issues) {
+        fields.push({
+          name: "Проблеми / інциденти",
+          value: issues,
+          inline: false
+        });
+      }
+
+      const payload = {
+        content: "@here Новий звіт складу",
+        embeds: [
+          {
+            title: "Звіт складу",
+            color: 3447003,
+            fields: fields
+          }
+        ]
+      };
+
+      try {
+        const res = await fetch(WEBHOOK_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+
+        if (res.ok) {
+          statusEl.textContent = "Звіт відправлено в Discord ✅";
+          form.reset();
+        } else {
+          statusEl.textContent = "Помилка при відправці ❌";
+        }
+      } catch (err) {
+        statusEl.textContent = "Не вдалося відправити (перевір URL вебхука)";
+      }
+    });
+  </script>
+</body>
+</html>
